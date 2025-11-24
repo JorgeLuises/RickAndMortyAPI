@@ -9,20 +9,24 @@ function AppContent() {
   const { state, dispatch } = useCharacters()
   const characters = state.characters
   const favCharacters = state.favorites
+
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(0);
+  const [searchQuery, setSearchQuery] = useState<string>('')
 
   // ====== Estado local para mostrar la vista de favoritos ===== //
   const [showFavorites, setShowFavorites] = useState<boolean>(false)
 
   // ========= Paginación y fetching del API ======== //
-  const pagination = async (pageNumber: number) => {
+  const pagination = async (pageNumber: number, name?: string) => {
     try {
-      const response = await fetch(`https://rickandmortyapi.com/api/character/?page=${pageNumber}`)
+      const base = 'https://rickandmortyapi.com/api/character/'
+      const url = name && name.length > 0 ? `${base}?page=${pageNumber}&name=${encodeURIComponent(name)}` : `${base}?page=${pageNumber}`
+      const response = await fetch(url)
       const data = await response.json();
 
-      setTotalPages(data.info.pages);
-      dispatch({ type: 'SET_CHARACTERS', payload: data.results });
+      setTotalPages(data.info?.pages ?? 0);
+      dispatch({ type: 'SET_CHARACTERS', payload: data.results ?? [] });
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -32,18 +36,33 @@ function AppContent() {
   }
 
   useEffect(() => {
-    pagination(page)
-  }, [page])
+    if (!showFavorites) {
+      pagination(page, searchQuery.trim())
+    }
+  }, [page, searchQuery, showFavorites])
 
-  // ========== Paginación de favoritos ====== //
-  const favoriteTotalPages: number = Math.ceil(favCharacters.length / 20);
-  const start = (page - 1) * 20;
-  const end = page * 20;
-  const paginatedFavs = favCharacters.slice(start, end);
+  // ========== Paginación de favoritos (local) ====== //
+  const PAGE_SIZE = 20
+  const filteredFavs = favCharacters.filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  const favoriteTotalPages: number = Math.max(1, Math.ceil(filteredFavs.length / PAGE_SIZE));
+  const start = (page - 1) * PAGE_SIZE;
+  const end = page * PAGE_SIZE;
+  const paginatedFavs = filteredFavs.slice(start, end);
 
   useEffect(() => {
     setPage(1)
   }, [showFavorites])
+
+  // ===== Funciones para la busqueda =====
+  const handleSearch = (q: string) => {
+    setSearchQuery(q)
+    setPage(1)
+  }
+
+  const handleClear = () => {
+    setSearchQuery('')
+    setPage(1)
+  }
 
   return (
     <>
@@ -55,7 +74,7 @@ function AppContent() {
 
       <section className="mt-10 md:flex md:items-center md:justify-between max-w-2xl mx-auto block px-4">
         <div className="flex-1 mr-0 md:mr-8 mb-4 md:mb-0">
-          <SearchBar />
+          <SearchBar value={searchQuery} onChange={handleSearch} onClear={handleClear} />
         </div>
 
         <div className="flex justify-end md:justify-auto">
@@ -78,7 +97,7 @@ function AppContent() {
       <footer className="bg-black text-white pb-24">
         <Pagination
           currentPage={!showFavorites && page > totalPages ? 1 : page}
-          totalPages={!showFavorites ? totalPages : favoriteTotalPages}
+          totalPages={!showFavorites ? Math.max(1, totalPages) : favoriteTotalPages}
           onPageChange={(newPage: number) => setPage(newPage)}
         />
       </footer>

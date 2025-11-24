@@ -7,7 +7,7 @@ export default function FavoriteToggle ({ isFavorites, onToggle }: FavoriteToggl
     return (
         <div className="flex items-center gap-3 cursor-pointer group" onClick={onToggle}>
 
-            {/* Texto de la etiqueta (opcional, para mayor claridad) */}
+            {/* Texto de la etiqueta */}
             <span className={`font-bold transition-colors duration-300 ${isFavorites ? 'text-pink-400' : 'text-gray-400 group-hover:text-gray-200'}`}>
                 {isFavorites ? 'Ver favoritos' : 'Ver todos'}
             </span>

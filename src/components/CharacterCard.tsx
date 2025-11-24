@@ -32,7 +32,7 @@ export default function CharacterCard({ character }: CardProps) {
                     alt={name}
                     className="w-full h-full object-cover transition-opacity"
                 />
-                {/* Etiqueta de Status flotante (opcional, pero útil) */}
+                {/* Etiqueta de Status flotante */}
                 <div className={`absolute top-2 right-2 px-2 py-1 rounded-lg text-xs font-bold border ${status === 'Alive' ? 'bg-green-900/80 border-green-500 text-green-300' :
                     status === 'Dead' ? 'bg-red-900/80 border-red-500 text-red-300' :
                         'bg-gray-700/80 border-gray-500 text-gray-300'
